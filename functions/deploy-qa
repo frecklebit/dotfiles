@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Deploys current branch to Zoro team environment
+# e.g. deploy-qa browse-d
+deploy-qa() {
+  # Make sure current directory is clean
+  if [[ -n "$(git status --untracked-files=no --porcelain)" ]]; then
+    echo "Please commit your work before deploying to QA"
+    return 1
+  fi
+
+  # Get the current git branch
+  branch=$(git_current_branch)
+
+  # Make sure origin repo is up to date
+  if [ ! -z "$(git diff $branch origin/$branch)" ]; then
+    git push origin "$branch"
+  fi
+
+  # Store arguments to variables
+  env=$1
+
+  if [ -z $env ]; then
+    echo -n "Which qa environment are you deploying to? " && read env
+  fi
+
+  # Update the environment variable
+  env="env/$env"
+
+  # Determine paths
+  current_path=$(pwd)
+  zoro_path="$WORKING_DIR/zoro"
+
+  if [ "$current_path" != "$zoro_path" ]; then
+    echo "Changing to Zoro's working directory.."
+    cd $zoro_path
+  fi
+
+  # Make sure branch isn't master or development
+  if [[ $branch =~ ^(master|develop|development)$ ]]; then
+    echo -n "Which branch would you like to deploy to $env? " read branch
+  fi
+
+  echo "Deploying branch '$branch' to QA environment '$env'..."
+  git push origin "$branch:$env" --force
+  echo "Done!"
+}

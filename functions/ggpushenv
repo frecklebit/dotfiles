@@ -1,0 +1,5 @@
+#!/bin/bash
+
+ggpushenv() {
+  git push origin "$(git_current_branch):env/$1" -f
+}
